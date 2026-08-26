@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import DiscordEmbedPreview from './components/DiscordEmbedPreview';
-import { Send, Image, Link, Type, Palette, Plus, Trash2, Radio, CheckCircle, AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
+import { Send, Image, Link, Type, Palette, Plus, Trash2, CheckCircle, AlertCircle, RefreshCw, Sparkles, MessageSquare, ListFilter, Hash, LogOut, ShieldCheck, Lock } from 'lucide-react';
 
 export default function App() {
   const [backendUrl, setBackendUrl] = useState('http://localhost:3000');
+  const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
   const [channels, setChannels] = useState([]);
   const [loadingChannels, setLoadingChannels] = useState(false);
   const [sending, setSending] = useState(false);
   const [statusMsg, setStatusMsg] = useState(null);
+  const [useManualChannel, setUseManualChannel] = useState(false);
 
   // Preset Discord Color Swatches
   const colorPresets = [
@@ -20,10 +24,11 @@ export default function App() {
     { name: 'Xám Discord', hex: '#4f545c' }
   ];
 
-  // Preset Template Quick Fills (Ví dụ: Code Game, Thông báo Server)
+  // Preset Templates
   const templates = [
     {
-      name: 'Code Game (Honkai / Genshin / WuWa)',
+      name: 'Code Game (Honkai / WuWa)',
+      content: '@everyone Mã quà tặng game mới nhất nè!',
       title: 'Code Livestream Mới Nhất!',
       description: 'Phiên bản 4.5 – Tìm thấy 1 mã code nhận quà!\n\n**Mã Code:**\n`2TKRKAR6YG2X`\n\n**Phần thưởng:** 100 Stellar Jade, 50,000 Credit',
       url: 'https://hsr.hoyoverse.com/',
@@ -34,7 +39,8 @@ export default function App() {
     },
     {
       name: 'Thông Báo Server',
-      title: '📢 THÔNG BÁO BẢO TRÌ HỆ THỐNG',
+      content: '📌 **THÔNG BÁO TỪ BQT SERVER**',
+      title: 'BẢO TRÌ HỆ THỐNG ĐỊNH KỲ',
       description: 'Xin chào toàn thể thành viên,\n\nHệ thống sẽ tiến hành bảo trì định kỳ để nâng cấp máy chủ.\nThời gian dự kiến: **00:00 - 02:00**.\n\nRất mong các bạn thông cảm!',
       url: '',
       color: '#f59e0b',
@@ -47,6 +53,7 @@ export default function App() {
   // Form State
   const [formData, setFormData] = useState({
     channelId: '',
+    content: '@everyone Mã quà tặng game mới!',
     title: 'Code livestream Honkai: Star Rail',
     description: 'Phiên bản 4.5 – Tìm thấy 1 code!\n\n**Code 1**\n`2TKRKAR6YG2X`\nPhần thưởng: Stellar Jade, 50,000 Credit ×100',
     url: 'https://hsr.hoyoverse.com/',
@@ -62,6 +69,54 @@ export default function App() {
     ]
   });
 
+  // Check saved user in localStorage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('anna_user');
+    if (savedUser) {
+      try {
+        const parsed = JSON.parse(savedUser);
+        setUser(parsed.user);
+        setIsAdmin(parsed.isAdmin);
+      } catch (e) {
+        localStorage.removeItem('anna_user');
+      }
+    }
+  }, []);
+
+  // Handle Discord OAuth2 Redirect Callback (?code=...)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    if (code) {
+      setAuthLoading(true);
+      fetch(`${backendUrl}/api/auth/callback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.user) {
+            setUser(data.user);
+            setIsAdmin(data.isAdmin);
+            localStorage.setItem('anna_user', JSON.stringify({ user: data.user, isAdmin: data.isAdmin }));
+            // Clear code from URL bar cleanly
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } else {
+            setStatusMsg({ type: 'error', text: data.error || 'Đăng nhập thất bại!' });
+          }
+        })
+        .catch(() => {
+          setStatusMsg({ type: 'error', text: 'Lỗi kết nối tới Server API Đăng Nhập!' });
+        })
+        .finally(() => {
+          setAuthLoading(false);
+        });
+    }
+  }, [backendUrl]);
+
+  // Fetch channels if user is logged in
   const fetchChannels = async () => {
     setLoadingChannels(true);
     try {
@@ -74,15 +129,42 @@ export default function App() {
         }
       }
     } catch (err) {
-      console.log("Chưa kết nối được Backend API:", backendUrl);
+      console.log('Chưa kết nối được Backend API:', backendUrl);
     } finally {
       setLoadingChannels(false);
     }
   };
 
   useEffect(() => {
-    fetchChannels();
-  }, [backendUrl]);
+    if (user) {
+      fetchChannels();
+    }
+  }, [user, backendUrl]);
+
+  // Handle Login with Discord Redirect
+  const handleDiscordLogin = async () => {
+    setAuthLoading(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/auth/url`);
+      const data = await res.json();
+      if (data.success && data.url) {
+        window.location.href = data.url;
+      } else {
+        setStatusMsg({ type: 'error', text: data.error || 'Vui lòng cấu hình CLIENT_ID trong file .env Backend!' });
+        setAuthLoading(false);
+      }
+    } catch (err) {
+      setStatusMsg({ type: 'error', text: 'Không kết nối được với Server Backend!' });
+      setAuthLoading(false);
+    }
+  };
+
+  // Handle Logout
+  const handleLogout = () => {
+    setUser(null);
+    setIsAdmin(false);
+    localStorage.removeItem('anna_user');
+  };
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -111,6 +193,7 @@ export default function App() {
   const applyTemplate = (tmpl) => {
     setFormData((prev) => ({
       ...prev,
+      content: tmpl.content || '',
       title: tmpl.title,
       description: tmpl.description,
       url: tmpl.url || '',
@@ -120,6 +203,14 @@ export default function App() {
       footerText: tmpl.footerText || ''
     }));
   };
+
+  // Group channels by Server
+  const groupedChannels = channels.reduce((acc, ch) => {
+    const guild = ch.guildName || 'Khác';
+    if (!acc[guild]) acc[guild] = [];
+    acc[guild].push(ch);
+    return acc;
+  }, {});
 
   const handleSendEmbed = async (e) => {
     e.preventDefault();
@@ -151,10 +242,69 @@ export default function App() {
     }
   };
 
+  // SCREEN 1: LOGIN SCREEN IF NOT LOGGED IN
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#1e1f22] text-[#dbdee1] flex items-center justify-center p-4">
+        <div className="bg-[#2b2d31] border border-[#383a40] p-8 rounded-2xl max-w-md w-full shadow-2xl text-center space-y-6">
+          <div className="w-16 h-16 bg-[#5865f2] rounded-2xl flex items-center justify-center mx-auto text-white shadow-lg">
+            <Lock className="w-8 h-8" />
+          </div>
+
+          <div>
+            <h1 className="text-2xl font-bold text-white leading-tight">Anna Dashboard</h1>
+            <p className="text-sm text-[#949ba4] mt-1.5">
+              Đăng nhập bằng tài khoản Discord của bạn để quản lý và gửi tin nhắn Embed vào Server.
+            </p>
+          </div>
+
+          {statusMsg && (
+            <div className={`p-3 rounded text-xs flex items-center space-x-2 text-left ${statusMsg.type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border border-rose-500/30 text-rose-400'}`}>
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{statusMsg.text}</span>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <button
+              onClick={handleDiscordLogin}
+              disabled={authLoading}
+              className="w-full bg-[#5865f2] hover:bg-[#4752c4] disabled:opacity-50 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center space-x-3 shadow-lg transition duration-200 cursor-pointer"
+            >
+              {authLoading ? (
+                <RefreshCw className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                  </svg>
+                  <span>ĐĂNG NHẬP BẰNG DISCORD</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="pt-4 border-t border-[#383a40]">
+            <div className="flex items-center justify-between text-xs text-[#949ba4] bg-[#1e1f22] p-2.5 rounded-lg border border-[#383a40]">
+              <span>API Backend:</span>
+              <input
+                type="text"
+                value={backendUrl}
+                onChange={(e) => setBackendUrl(e.target.value)}
+                className="bg-transparent text-xs text-white outline-none w-44 font-mono text-right"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // SCREEN 2: MAIN DASHBOARD WHEN LOGGED IN
   return (
     <div className="min-h-screen bg-[#1e1f22] text-[#dbdee1] font-sans antialiased">
-      {/* Navbar */}
-      <header className="bg-[#2b2d31] border-b border-[#383a40] px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      {/* Header Bar */}
+      <header className="bg-[#2b2d31] border-b border-[#383a40] px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-50 shadow-md">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 rounded-lg bg-[#5865f2] flex items-center justify-center text-white font-bold text-lg">
             A
@@ -165,22 +315,26 @@ export default function App() {
           </div>
         </div>
 
-        {/* Backend Endpoint Input */}
-        <div className="flex items-center space-x-2 bg-[#1e1f22] px-3 py-1.5 rounded border border-[#383a40]">
-          <span className="text-xs text-[#949ba4] font-medium">Server API:</span>
-          <input
-            type="text"
-            value={backendUrl}
-            onChange={(e) => setBackendUrl(e.target.value)}
-            className="bg-transparent text-xs text-white outline-none w-48 font-mono"
-            placeholder="http://localhost:3000"
-          />
+        {/* User Info & Logout */}
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 bg-[#1e1f22] px-3 py-1.5 rounded-lg border border-[#383a40]">
+            <img src={user.avatar} alt="avatar" className="w-7 h-7 rounded-full border border-[#5865f2]" />
+            <div className="text-left">
+              <div className="text-xs font-bold text-white flex items-center gap-1">
+                <span>{user.globalName || user.username}</span>
+                {isAdmin && <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" title="Admin Verified" />}
+              </div>
+              <span className="text-[10px] text-[#949ba4] font-mono">@{user.username}</span>
+            </div>
+          </div>
+
           <button
-            onClick={fetchChannels}
-            className="text-[#949ba4] hover:text-white transition p-0.5"
-            title="Kiểm tra kết nối & Tải lại Kênh"
+            onClick={handleLogout}
+            className="text-xs bg-[#1e1f22] hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 p-2 rounded-lg border border-[#383a40] transition flex items-center gap-1 cursor-pointer"
+            title="Đăng xuất"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loadingChannels ? 'animate-spin' : ''}`} />
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Đăng xuất</span>
           </button>
         </div>
       </header>
@@ -199,14 +353,14 @@ export default function App() {
             {/* Quick Templates */}
             <div className="flex items-center space-x-2">
               <span className="text-xs text-[#949ba4] flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> Mẫu nhanh:
+                <Sparkles className="w-3 h-3 text-amber-400" /> Mẫu nhanh:
               </span>
               {templates.map((t, idx) => (
                 <button
                   key={idx}
                   onClick={() => applyTemplate(t)}
                   type="button"
-                  className="text-xs bg-[#1e1f22] hover:bg-[#35373c] text-white px-2.5 py-1 rounded border border-[#383a40] transition"
+                  className="text-xs bg-[#1e1f22] hover:bg-[#35373c] text-white px-2.5 py-1 rounded border border-[#383a40] transition cursor-pointer"
                 >
                   {t.name}
                 </button>
@@ -223,32 +377,62 @@ export default function App() {
 
           <form onSubmit={handleSendEmbed} className="space-y-4">
             
-            {/* Channel Selection */}
+            {/* Channel Selection Header & Toggle */}
             <div>
-              <label className="block text-xs font-semibold uppercase text-[#949ba4] mb-1">
-                Kênh Discord đăng bài <span className="text-rose-400">*</span>
-              </label>
-              {channels.length > 0 ? (
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-xs font-semibold uppercase text-[#949ba4]">
+                  Kênh Discord đăng bài <span className="text-rose-400">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setUseManualChannel(!useManualChannel)}
+                  className="text-xs text-[#5865f2] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  {useManualChannel ? <ListFilter className="w-3 h-3" /> : <Hash className="w-3 h-3" />}
+                  <span>{useManualChannel ? 'Dùng Dropdown danh sách' : 'Nhập Channel ID thủ công'}</span>
+                </button>
+              </div>
+
+              {!useManualChannel && channels.length > 0 ? (
                 <select
                   value={formData.channelId}
                   onChange={(e) => handleChange('channelId', e.target.value)}
-                  className="w-full bg-[#1e1f22] border border-[#383a40] text-white text-sm rounded p-2.5 outline-none focus:border-[#5865f2]"
+                  className="w-full bg-[#1e1f22] border border-[#383a40] text-white text-sm rounded p-2.5 outline-none focus:border-[#5865f2] cursor-pointer"
                 >
-                  {channels.map((ch) => (
-                    <option key={ch.id} value={ch.id}>
-                      #{ch.name} ({ch.guildName})
-                    </option>
+                  {Object.keys(groupedChannels).map((guildName) => (
+                    <optgroup key={guildName} label={`🏰 Server: ${guildName}`}>
+                      {groupedChannels[guildName].map((ch) => (
+                        <option key={ch.id} value={ch.id}>
+                          #{ch.name}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               ) : (
                 <input
                   type="text"
-                  placeholder="Nhập Channel ID (vd: 1450073214620405903)"
+                  placeholder="Nhập Channel ID thủ công"
                   value={formData.channelId}
                   onChange={(e) => handleChange('channelId', e.target.value)}
                   className="w-full bg-[#1e1f22] border border-[#383a40] text-white text-sm rounded p-2.5 outline-none focus:border-[#5865f2]"
                 />
               )}
+            </div>
+
+            {/* Regular Message Content Outside Embed */}
+            <div className="bg-[#1e1f22] p-3 rounded border border-[#383a40] space-y-1">
+              <label className="block text-xs font-semibold uppercase text-[#949ba4] flex items-center gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5 text-[#5865f2]" /> Tin nhắn thường ngoài Embed (Tùy chọn)
+              </label>
+              <input
+                type="text"
+                value={formData.content}
+                onChange={(e) => handleChange('content', e.target.value)}
+                placeholder="Ví dụ: @everyone Mã quà tặng hot hôm nay!"
+                className="w-full bg-[#2b2d31] border border-[#383a40] text-white text-sm rounded p-2 outline-none focus:border-[#5865f2]"
+              />
+              <p className="text-[11px] text-[#949ba4]">Nội dung này hiển thị phía trên khung Embed (Có thể dùng tag @everyone, role...)</p>
             </div>
 
             {/* Title & Color Swatches */}
@@ -308,7 +492,7 @@ export default function App() {
             {/* Description */}
             <div>
               <label className="block text-xs font-semibold uppercase text-[#949ba4] mb-1">
-                Nội dung bài viết (Description)
+                Nội dung bài viết Embed (Description)
               </label>
               <textarea
                 rows={5}
@@ -355,7 +539,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={addField}
-                  className="text-xs bg-[#1e1f22] hover:bg-[#35373c] text-white px-2.5 py-1 rounded border border-[#383a40] flex items-center gap-1 transition"
+                  className="text-xs bg-[#1e1f22] hover:bg-[#35373c] text-white px-2.5 py-1 rounded border border-[#383a40] flex items-center gap-1 transition cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" /> Thêm ô mới
                 </button>
@@ -390,7 +574,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => removeField(idx)}
-                      className="text-[#949ba4] hover:text-rose-400 p-1 transition"
+                      className="text-[#949ba4] hover:text-rose-400 p-1 transition cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -429,7 +613,7 @@ export default function App() {
               <button
                 type="submit"
                 disabled={sending}
-                className="w-full bg-[#5865f2] hover:bg-[#4752c4] disabled:opacity-50 text-white font-semibold py-3 rounded flex items-center justify-center space-x-2 transition duration-150"
+                className="w-full bg-[#5865f2] hover:bg-[#4752c4] disabled:opacity-50 text-white font-semibold py-3 rounded flex items-center justify-center space-x-2 transition duration-150 shadow-md cursor-pointer"
               >
                 <Send className="w-4 h-4" />
                 <span>{sending ? 'Đang gửi tới Discord...' : 'Gửi bài viết vào Discord'}</span>
@@ -449,7 +633,7 @@ export default function App() {
             </span>
           </div>
 
-          <div className="sticky top-6">
+          <div className="sticky top-20">
             <DiscordEmbedPreview embedData={formData} />
           </div>
         </div>

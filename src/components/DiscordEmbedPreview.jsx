@@ -2,6 +2,7 @@ import React from 'react';
 
 export default function DiscordEmbedPreview({ embedData }) {
   const {
+    content,
     title,
     description,
     url,
@@ -15,19 +16,14 @@ export default function DiscordEmbedPreview({ embedData }) {
     fields = []
   } = embedData;
 
-  // Format simple markdown bold / code / link preview for description
   const renderMarkdown = (text) => {
     if (!text) return null;
-    return text.split('\n').map((line, i) => {
-      // Basic formatting for code blocks or bold text in preview
-      let formatted = line;
-      return (
-        <React.Fragment key={i}>
-          {line}
-          {i < text.split('\n').length - 1 && <br />}
-        </React.Fragment>
-      );
-    });
+    return text.split('\n').map((line, i) => (
+      <React.Fragment key={i}>
+        {line}
+        {i < text.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    ));
   };
 
   return (
@@ -43,7 +39,7 @@ export default function DiscordEmbedPreview({ embedData }) {
           }}
         />
         <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-1.5 leading-tight">
+          <div className="flex items-center space-x-1.5 leading-tight mb-1">
             <span className="font-semibold text-white text-base hover:underline cursor-pointer">
               {authorName || "Anna Bot"}
             </span>
@@ -55,8 +51,15 @@ export default function DiscordEmbedPreview({ embedData }) {
             </span>
           </div>
 
+          {/* Regular Message Content Outside Embed */}
+          {content && (
+            <div className="text-[#dbdee1] text-sm leading-relaxed whitespace-pre-wrap break-words mb-2 font-sans">
+              {renderMarkdown(content)}
+            </div>
+          )}
+
           {/* Embed Container */}
-          <div className="mt-1.5 flex max-w-lg">
+          <div className="mt-1 flex max-w-lg">
             {/* Color Pill / Border */}
             <div
               className="w-1 rounded-l flex-shrink-0"
