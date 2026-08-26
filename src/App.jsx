@@ -100,8 +100,8 @@ export default function App() {
           if (data.success && data.user) {
             setUser(data.user);
             setIsAdmin(data.isAdmin);
+            setStatusMsg(null); // Clear error message on successful login
             localStorage.setItem('anna_user', JSON.stringify({ user: data.user, isAdmin: data.isAdmin }));
-            // Clear code from URL bar cleanly
             window.history.replaceState({}, document.title, window.location.pathname);
           } else {
             setStatusMsg({ type: 'error', text: data.error || 'Đăng nhập thất bại!' });
@@ -144,6 +144,7 @@ export default function App() {
   // Handle Login with Discord Redirect
   const handleDiscordLogin = async () => {
     setAuthLoading(true);
+    setStatusMsg(null);
     try {
       const res = await fetch(`${backendUrl}/api/auth/url`);
       const data = await res.json();
@@ -163,6 +164,7 @@ export default function App() {
   const handleLogout = () => {
     setUser(null);
     setIsAdmin(false);
+    setStatusMsg(null);
     localStorage.removeItem('anna_user');
   };
 
