@@ -14,7 +14,9 @@ export default function Features({
     wordchainAutoPlaySec: 60,
     wordscrambleEnabled: false,
     wordscrambleChannelId: '',
-    wordscrambleRoundSec: 60
+    wordscrambleRoundSec: 60,
+    wuwaEnabled: false,
+    wuwaChannelId: ''
   });
 
   const [loading, setLoading] = useState(true);
@@ -39,7 +41,9 @@ export default function Features({
             wordchainAutoPlaySec: cfg.wordchainAutoPlaySec || 60,
             wordscrambleEnabled: !!cfg.wordscrambleEnabled,
             wordscrambleChannelId: cfg.wordscrambleChannelId || '',
-            wordscrambleRoundSec: cfg.wordscrambleRoundSec || 60
+            wordscrambleRoundSec: cfg.wordscrambleRoundSec || 60,
+            wuwaEnabled: !!cfg.wuwaEnabled,
+            wuwaChannelId: cfg.wuwaChannelId || ''
           });
         }
       })
@@ -65,7 +69,9 @@ export default function Features({
       wordchainAutoPlaySec: Number(config.wordchainAutoPlaySec) || 60,
       wordscrambleEnabled: config.wordscrambleEnabled,
       wordscrambleChannelId: config.wordscrambleChannelId,
-      wordscrambleRoundSec: Number(config.wordscrambleRoundSec) || 60
+      wordscrambleRoundSec: Number(config.wordscrambleRoundSec) || 60,
+      wuwaEnabled: config.wuwaEnabled,
+      wuwaChannelId: config.wuwaChannelId
     };
 
     try {
@@ -82,13 +88,13 @@ export default function Features({
         setResultMsg({
           open: true,
           type: 'success',
-          text: 'Lưu cấu hình minigame cho Server thành công!'
+          text: 'Lưu cấu hình tính năng cho Server thành công!'
         });
       } else {
         setResultMsg({
           open: true,
           type: 'error',
-          text: data.error || 'Lỗi lưu cấu hình minigame!'
+          text: data.error || 'Lỗi lưu cấu hình tính năng!'
         });
       }
     } catch (err) {
@@ -102,7 +108,7 @@ export default function Features({
     return (
       <div className="bg-anna-card border border-anna-border p-8 rounded-2xl text-center space-y-3">
         <RefreshCw className="w-6 h-6 animate-spin text-anna-accent mx-auto" />
-        <p className="text-sm text-anna-muted font-medium">Đang tải cấu hình minigame của Server...</p>
+        <p className="text-sm text-anna-muted font-medium">Đang tải cấu hình tính năng của Server...</p>
       </div>
     );
   }
@@ -110,8 +116,8 @@ export default function Features({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Cấu Hình Minigame Cho Server</h2>
-        <p className="text-sm text-anna-muted font-medium mt-1">Tùy chỉnh chọn kênh phát game và cài đặt thời gian phản hồi theo ý muốn</p>
+        <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Cấu Hình Tính Năng Tự Động</h2>
+        <p className="text-sm text-anna-muted font-medium mt-1">Tùy chỉnh chọn kênh phát game và cài đặt các tính năng tự động theo ý muốn</p>
       </div>
 
       {resultMsg.open && (
@@ -286,6 +292,58 @@ export default function Features({
           </div>
         </div>
 
+        {/* PANEL 3: TỰ ĐỘNG SẮN CODE WUTHERING WAVES */}
+        <div className="bg-anna-card border border-anna-border rounded-2xl p-7 space-y-5 shadow-xl">
+          <div className="flex flex-wrap items-center justify-between border-b border-anna-border pb-4 gap-4">
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-white">3. Tự Động Săn Code Game Wuthering Waves</h3>
+              <p className="text-xs text-anna-muted font-normal mt-0.5">Tự động cào giftcode mới và gửi thông báo vào kênh Discord của Server</p>
+            </div>
+
+            {/* Toggle Switch */}
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={config.wuwaEnabled}
+                onChange={(e) => handleChange('wuwaEnabled', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-anna-dark peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-anna-accent"></div>
+              <span className="ml-3 text-xs font-bold text-white">
+                {config.wuwaEnabled ? 'ĐANG BẬT' : 'ĐÃ TẮT'}
+              </span>
+            </label>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-anna-muted">
+              Kênh Discord Nhận Thông Báo Giftcode Mới
+            </label>
+            {activeGuildChannels.length > 0 ? (
+              <select
+                value={config.wuwaChannelId}
+                onChange={(e) => handleChange('wuwaChannelId', e.target.value)}
+                className="w-full bg-anna-dark border border-anna-border text-white text-sm rounded-xl p-3 outline-none focus:border-anna-accent font-medium cursor-pointer"
+              >
+                <option value="">-- Chọn kênh nhận thông báo Giftcode --</option>
+                {activeGuildChannels.map((ch) => (
+                  <option key={ch.id} value={ch.id}>
+                    #{ch.name} (ID: {ch.id})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                placeholder="Nhập Channel ID thủ công (vd: 1447095306079698984)"
+                value={config.wuwaChannelId}
+                onChange={(e) => handleChange('wuwaChannelId', e.target.value)}
+                className="w-full bg-anna-dark border border-anna-border text-white text-sm rounded-xl p-3 outline-none focus:border-anna-accent font-mono"
+              />
+            )}
+          </div>
+        </div>
+
         {/* SAVE BUTTON */}
         <div className="pt-2">
           <button
@@ -294,7 +352,7 @@ export default function Features({
             className="w-full sm:w-auto bg-anna-accent hover:bg-anna-hover disabled:opacity-50 text-white font-bold py-3.5 px-8 rounded-2xl transition duration-150 shadow-xl cursor-pointer text-sm flex items-center justify-center space-x-2"
           >
             <Save className="w-4 h-4" />
-            <span>{saving ? 'Đang lưu cấu hình...' : 'LƯU CẤU HÌNH MINIGAME'}</span>
+            <span>{saving ? 'Đang lưu cấu hình...' : 'LƯU TẤT CẢ CẤU HÌNH'}</span>
           </button>
         </div>
 
