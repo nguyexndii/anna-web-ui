@@ -26,7 +26,7 @@ export default function Features({
 
   const activeGuildChannels = (channels || []).filter((ch) => ch && ch.guildId === guildId);
 
-  // Load Config for current guildId
+  // Load Config for current guildId from Server DB
   useEffect(() => {
     if (!guildId) return;
     setLoading(true);
@@ -54,10 +54,72 @@ export default function Features({
       });
   }, [guildId, backendUrl]);
 
+  // Helper: Save config state directly to Backend API
+  const saveConfigToApi = async (targetConfig, customSuccessText = '') => {
+    setSaving(true);
+    setResultMsg({ open: false, type: 'success', text: '' });
+
+    const payload = {
+      wordchainEnabled: targetConfig.wordchainEnabled,
+      wordchainChannelId: targetConfig.wordchainChannelId,
+      wordchainHintCooldownMs: (Number(targetConfig.wordchainHintCooldownMin) || 2) * 60000,
+      wordchainAutoPlaySec: Number(targetConfig.wordchainAutoPlaySec) || 60,
+      wordscrambleEnabled: targetConfig.wordscrambleEnabled,
+      wordscrambleChannelId: targetConfig.wordscrambleChannelId,
+      wordscrambleRoundSec: Number(targetConfig.wordscrambleRoundSec) || 60,
+      wuwaEnabled: targetConfig.wuwaEnabled,
+      wuwaChannelId: targetConfig.wuwaChannelId
+    };
+
+    try {
+      const res = await fetch(`${backendUrl}/api/guilds/${guildId}/config`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (handleApiError && handleApiError(res, data)) return false;
+
+      if (data.success && data.config) {
+        const cfg = data.config;
+        setConfig({
+          wordchainEnabled: !!cfg.wordchainEnabled,
+          wordchainChannelId: cfg.wordchainChannelId || '',
+          wordchainHintCooldownMin: Math.round((cfg.wordchainHintCooldownMs || 120000) / 60000),
+          wordchainAutoPlaySec: cfg.wordchainAutoPlaySec || 60,
+          wordscrambleEnabled: !!cfg.wordscrambleEnabled,
+          wordscrambleChannelId: cfg.wordscrambleChannelId || '',
+          wordscrambleRoundSec: cfg.wordscrambleRoundSec || 60,
+          wuwaEnabled: !!cfg.wuwaEnabled,
+          wuwaChannelId: cfg.wuwaChannelId || ''
+        });
+
+        setResultMsg({
+          open: true,
+          type: 'success',
+          text: customSuccessText || 'Đã lưu cấu hình thành công vào cơ sở dữ liệu!'
+        });
+        return true;
+      } else {
+        setResultMsg({
+          open: true,
+          type: 'error',
+          text: data.error || 'Lỗi lưu cấu hình!'
+        });
+        return false;
+      }
+    } catch (err) {
+      setResultMsg({ open: true, type: 'error', text: 'Không thể kết nối tới Backend Server!' });
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleChange = (field, value) => {
     setConfig((prev) => ({ ...prev, [field]: value }));
 
-    // Clear field-specific validation errors when user selects a channel
     if (field === 'wordchainChannelId' && value) {
       setErrors((prev) => ({ ...prev, wordchain: '' }));
     }
@@ -69,39 +131,57 @@ export default function Features({
     }
   };
 
-  // Toggle Handlers with Validation
-  const handleToggleWordchain = (checked) => {
+  // Immediate Toggle Handlers with Validation & API Persistence
+  const handleToggleWordchain = async (checked) => {
     if (checked && !config.wordchainChannelId) {
       setErrors((prev) => ({ ...prev, wordchain: 'Vui lòng chọn Kênh Discord cho Minigame Nối Từ trước khi bật!' }));
       return;
     }
     setErrors((prev) => ({ ...prev, wordchain: '' }));
-    setConfig((prev) => ({ ...prev, wordchainEnabled: checked }));
+    const newCfg = { ...config, wordchainEnabled: checked };
+    setConfig(newCfg);
+    await saveConfigToApi(
+      newCfg,
+      checked
+        ? 'Đã BẬT Minigame Nối Từ và gửi từ khởi đầu vào kênh Discord!'
+        : 'Đã TẮT Minigame Nối Từ!'
+    );
   };
 
-  const handleToggleWordscramble = (checked) => {
+  const handleToggleWordscramble = async (checked) => {
     if (checked && !config.wordscrambleChannelId) {
       setErrors((prev) => ({ ...prev, wordscramble: 'Vui lòng chọn Kênh Discord cho Minigame Sắp Xếp Từ trước khi bật!' }));
       return;
     }
     setErrors((prev) => ({ ...prev, wordscramble: '' }));
-    setConfig((prev) => ({ ...prev, wordscrambleEnabled: checked }));
+    const newCfg = { ...config, wordscrambleEnabled: checked };
+    setConfig(newCfg);
+    await saveConfigToApi(
+      newCfg,
+      checked
+        ? 'Đã BẬT Minigame Sắp Xếp Từ và gửi câu đố mới vào kênh Discord!'
+        : 'Đã TẮT Minigame Sắp Xếp Từ!'
+    );
   };
 
-  const handleToggleWuwa = (checked) => {
+  const handleToggleWuwa = async (checked) => {
     if (checked && !config.wuwaChannelId) {
       setErrors((prev) => ({ ...prev, wuwa: 'Vui lòng chọn Kênh Discord cho Săn Code Wuthering Waves trước khi bật!' }));
       return;
     }
     setErrors((prev) => ({ ...prev, wuwa: '' }));
-    setConfig((prev) => ({ ...prev, wuwaEnabled: checked }));
+    const newCfg = { ...config, wuwaEnabled: checked };
+    setConfig(newCfg);
+    await saveConfigToApi(
+      newCfg,
+      checked
+        ? 'Đã BẬT Tự Động Săn Code Wuthering Waves!'
+        : 'Đã TẮT Tự Động Săn Code Wuthering Waves!'
+    );
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    setResultMsg({ open: false, type: 'success', text: '' });
-
-    // Validate before saving
     let hasError = false;
     const newErrors = { wordchain: '', wordscramble: '', wuwa: '' };
 
@@ -129,48 +209,7 @@ export default function Features({
       return;
     }
 
-    setSaving(true);
-
-    const payload = {
-      wordchainEnabled: config.wordchainEnabled,
-      wordchainChannelId: config.wordchainChannelId,
-      wordchainHintCooldownMs: (Number(config.wordchainHintCooldownMin) || 2) * 60000,
-      wordchainAutoPlaySec: Number(config.wordchainAutoPlaySec) || 60,
-      wordscrambleEnabled: config.wordscrambleEnabled,
-      wordscrambleChannelId: config.wordscrambleChannelId,
-      wordscrambleRoundSec: Number(config.wordscrambleRoundSec) || 60,
-      wuwaEnabled: config.wuwaEnabled,
-      wuwaChannelId: config.wuwaChannelId
-    };
-
-    try {
-      const res = await fetch(`${backendUrl}/api/guilds/${guildId}/config`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (handleApiError && handleApiError(res, data)) return;
-
-      if (data.success) {
-        setResultMsg({
-          open: true,
-          type: 'success',
-          text: 'Lưu cấu hình thành công! Các minigame đang bật đã gửi tin nhắn khởi tạo tới kênh Discord!'
-        });
-      } else {
-        setResultMsg({
-          open: true,
-          type: 'error',
-          text: data.error || 'Lỗi lưu cấu hình tính năng!'
-        });
-      }
-    } catch (err) {
-      setResultMsg({ open: true, type: 'error', text: 'Không thể kết nối tới Backend Server!' });
-    } finally {
-      setSaving(false);
-    }
+    await saveConfigToApi(config, 'Đã lưu cài đặt kênh và thời gian thành công!');
   };
 
   if (loading) {
