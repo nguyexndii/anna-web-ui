@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Save, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, Save, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function Features({
   channels = [],
@@ -22,6 +22,7 @@ export default function Features({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [resultMsg, setResultMsg] = useState({ open: false, type: 'success', text: '' });
+  const [errors, setErrors] = useState({ wordchain: '', wordscramble: '', wuwa: '' });
 
   const activeGuildChannels = (channels || []).filter((ch) => ch && ch.guildId === guildId);
 
@@ -55,12 +56,80 @@ export default function Features({
 
   const handleChange = (field, value) => {
     setConfig((prev) => ({ ...prev, [field]: value }));
+
+    // Clear field-specific validation errors when user selects a channel
+    if (field === 'wordchainChannelId' && value) {
+      setErrors((prev) => ({ ...prev, wordchain: '' }));
+    }
+    if (field === 'wordscrambleChannelId' && value) {
+      setErrors((prev) => ({ ...prev, wordscramble: '' }));
+    }
+    if (field === 'wuwaChannelId' && value) {
+      setErrors((prev) => ({ ...prev, wuwa: '' }));
+    }
+  };
+
+  // Toggle Handlers with Validation
+  const handleToggleWordchain = (checked) => {
+    if (checked && !config.wordchainChannelId) {
+      setErrors((prev) => ({ ...prev, wordchain: 'Vui lòng chọn Kênh Discord cho Minigame Nối Từ trước khi bật!' }));
+      return;
+    }
+    setErrors((prev) => ({ ...prev, wordchain: '' }));
+    setConfig((prev) => ({ ...prev, wordchainEnabled: checked }));
+  };
+
+  const handleToggleWordscramble = (checked) => {
+    if (checked && !config.wordscrambleChannelId) {
+      setErrors((prev) => ({ ...prev, wordscramble: 'Vui lòng chọn Kênh Discord cho Minigame Sắp Xếp Từ trước khi bật!' }));
+      return;
+    }
+    setErrors((prev) => ({ ...prev, wordscramble: '' }));
+    setConfig((prev) => ({ ...prev, wordscrambleEnabled: checked }));
+  };
+
+  const handleToggleWuwa = (checked) => {
+    if (checked && !config.wuwaChannelId) {
+      setErrors((prev) => ({ ...prev, wuwa: 'Vui lòng chọn Kênh Discord cho Săn Code Wuthering Waves trước khi bật!' }));
+      return;
+    }
+    setErrors((prev) => ({ ...prev, wuwa: '' }));
+    setConfig((prev) => ({ ...prev, wuwaEnabled: checked }));
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    setSaving(true);
     setResultMsg({ open: false, type: 'success', text: '' });
+
+    // Validate before saving
+    let hasError = false;
+    const newErrors = { wordchain: '', wordscramble: '', wuwa: '' };
+
+    if (config.wordchainEnabled && !config.wordchainChannelId) {
+      newErrors.wordchain = 'Chưa chọn Kênh Discord phát game Nối Từ!';
+      hasError = true;
+    }
+    if (config.wordscrambleEnabled && !config.wordscrambleChannelId) {
+      newErrors.wordscramble = 'Chưa chọn Kênh Discord phát game Sắp Xếp Từ!';
+      hasError = true;
+    }
+    if (config.wuwaEnabled && !config.wuwaChannelId) {
+      newErrors.wuwa = 'Chưa chọn Kênh Discord nhận thông báo Giftcode!';
+      hasError = true;
+    }
+
+    setErrors(newErrors);
+
+    if (hasError) {
+      setResultMsg({
+        open: true,
+        type: 'error',
+        text: 'Vui lòng chọn Kênh Discord cho các tính năng đang bật trước khi lưu!'
+      });
+      return;
+    }
+
+    setSaving(true);
 
     const payload = {
       wordchainEnabled: config.wordchainEnabled,
@@ -88,7 +157,7 @@ export default function Features({
         setResultMsg({
           open: true,
           type: 'success',
-          text: 'Lưu cấu hình tính năng cho Server thành công!'
+          text: 'Lưu cấu hình thành công! Các minigame đang bật đã gửi tin nhắn khởi tạo tới kênh Discord!'
         });
       } else {
         setResultMsg({
@@ -117,7 +186,7 @@ export default function Features({
     <div className="space-y-6">
       <div>
         <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Cấu Hình Tính Năng Tự Động</h2>
-        <p className="text-sm text-anna-muted font-medium mt-1">Tùy chỉnh chọn kênh phát game và cài đặt các tính năng tự động theo ý muốn</p>
+        <p className="text-sm text-anna-muted font-medium mt-1">Chọn kênh Discord bắt buộc và cài đặt các tham số minigame trước khi bật</p>
       </div>
 
       {resultMsg.open && (
@@ -126,7 +195,11 @@ export default function Features({
             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
             : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
         }`}>
-          <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+          {resultMsg.type === 'success' ? (
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+          ) : (
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          )}
           <span>{resultMsg.text}</span>
         </div>
       )}
@@ -146,7 +219,7 @@ export default function Features({
               <input
                 type="checkbox"
                 checked={config.wordchainEnabled}
-                onChange={(e) => handleChange('wordchainEnabled', e.target.checked)}
+                onChange={(e) => handleToggleWordchain(e.target.checked)}
                 className="sr-only peer"
               />
               <div className="w-11 h-6 bg-anna-dark peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-anna-accent"></div>
@@ -156,18 +229,27 @@ export default function Features({
             </label>
           </div>
 
+          {errors.wordchain && (
+            <div className="text-xs text-rose-400 bg-rose-500/10 p-3 rounded-xl border border-rose-500/20 flex items-center gap-2 font-medium">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{errors.wordchain}</span>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             
             {/* Choose Channel */}
             <div className="md:col-span-2 space-y-1.5">
               <label className="block text-xs font-bold uppercase tracking-wider text-anna-muted">
-                Kênh Discord Nhận Tin Nhắn Nối Từ
+                Kênh Discord Nhận Tin Nhắn Nối Từ <span className="text-rose-400">*</span>
               </label>
               {activeGuildChannels.length > 0 ? (
                 <select
                   value={config.wordchainChannelId}
                   onChange={(e) => handleChange('wordchainChannelId', e.target.value)}
-                  className="w-full bg-anna-dark border border-anna-border text-white text-sm rounded-xl p-3 outline-none focus:border-anna-accent font-medium cursor-pointer"
+                  className={`w-full bg-anna-dark border text-white text-sm rounded-xl p-3 outline-none focus:border-anna-accent font-medium cursor-pointer ${
+                    errors.wordchain ? 'border-rose-500/80 ring-1 ring-rose-500/50' : 'border-anna-border'
+                  }`}
                 >
                   <option value="">-- Chọn kênh chat Nối Từ --</option>
                   {activeGuildChannels.map((ch) => (
@@ -182,7 +264,9 @@ export default function Features({
                   placeholder="Nhập Channel ID thủ công (vd: 1450073214620405903)"
                   value={config.wordchainChannelId}
                   onChange={(e) => handleChange('wordchainChannelId', e.target.value)}
-                  className="w-full bg-anna-dark border border-anna-border text-white text-sm rounded-xl p-3 outline-none focus:border-anna-accent font-mono"
+                  className={`w-full bg-anna-dark border text-white text-sm rounded-xl p-3 outline-none focus:border-anna-accent font-mono ${
+                    errors.wordchain ? 'border-rose-500/80 ring-1 ring-rose-500/50' : 'border-anna-border'
+                  }`}
                 />
               )}
             </div>
@@ -233,7 +317,7 @@ export default function Features({
               <input
                 type="checkbox"
                 checked={config.wordscrambleEnabled}
-                onChange={(e) => handleChange('wordscrambleEnabled', e.target.checked)}
+                onChange={(e) => handleToggleWordscramble(e.target.checked)}
                 className="sr-only peer"
               />
               <div className="w-11 h-6 bg-anna-dark peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-anna-accent"></div>
@@ -243,18 +327,27 @@ export default function Features({
             </label>
           </div>
 
+          {errors.wordscramble && (
+            <div className="text-xs text-rose-400 bg-rose-500/10 p-3 rounded-xl border border-rose-500/20 flex items-center gap-2 font-medium">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{errors.wordscramble}</span>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             
             {/* Choose Channel */}
             <div className="space-y-1.5">
               <label className="block text-xs font-bold uppercase tracking-wider text-anna-muted">
-                Kênh Discord Nhận Tin Nhắn Đố Chữ
+                Kênh Discord Nhận Tin Nhắn Đố Chữ <span className="text-rose-400">*</span>
               </label>
               {activeGuildChannels.length > 0 ? (
                 <select
                   value={config.wordscrambleChannelId}
                   onChange={(e) => handleChange('wordscrambleChannelId', e.target.value)}
-                  className="w-full bg-anna-dark border border-anna-border text-white text-sm rounded-xl p-3 outline-none focus:border-anna-accent font-medium cursor-pointer"
+                  className={`w-full bg-anna-dark border text-white text-sm rounded-xl p-3 outline-none focus:border-anna-accent font-medium cursor-pointer ${
+                    errors.wordscramble ? 'border-rose-500/80 ring-1 ring-rose-500/50' : 'border-anna-border'
+                  }`}
                 >
                   <option value="">-- Chọn kênh chat Sắp Xếp Từ --</option>
                   {activeGuildChannels.map((ch) => (
@@ -269,7 +362,9 @@ export default function Features({
                   placeholder="Nhập Channel ID thủ công (vd: 1535705241620717720)"
                   value={config.wordscrambleChannelId}
                   onChange={(e) => handleChange('wordscrambleChannelId', e.target.value)}
-                  className="w-full bg-anna-dark border border-anna-border text-white text-sm rounded-xl p-3 outline-none focus:border-anna-accent font-mono"
+                  className={`w-full bg-anna-dark border text-white text-sm rounded-xl p-3 outline-none focus:border-anna-accent font-mono ${
+                    errors.wordscramble ? 'border-rose-500/80 ring-1 ring-rose-500/50' : 'border-anna-border'
+                  }`}
                 />
               )}
             </div>
@@ -305,7 +400,7 @@ export default function Features({
               <input
                 type="checkbox"
                 checked={config.wuwaEnabled}
-                onChange={(e) => handleChange('wuwaEnabled', e.target.checked)}
+                onChange={(e) => handleToggleWuwa(e.target.checked)}
                 className="sr-only peer"
               />
               <div className="w-11 h-6 bg-anna-dark peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-anna-accent"></div>
@@ -315,15 +410,24 @@ export default function Features({
             </label>
           </div>
 
+          {errors.wuwa && (
+            <div className="text-xs text-rose-400 bg-rose-500/10 p-3 rounded-xl border border-rose-500/20 flex items-center gap-2 font-medium">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{errors.wuwa}</span>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <label className="block text-xs font-bold uppercase tracking-wider text-anna-muted">
-              Kênh Discord Nhận Thông Báo Giftcode Mới
+              Kênh Discord Nhận Thông Báo Giftcode Mới <span className="text-rose-400">*</span>
             </label>
             {activeGuildChannels.length > 0 ? (
               <select
                 value={config.wuwaChannelId}
                 onChange={(e) => handleChange('wuwaChannelId', e.target.value)}
-                className="w-full bg-anna-dark border border-anna-border text-white text-sm rounded-xl p-3 outline-none focus:border-anna-accent font-medium cursor-pointer"
+                className={`w-full bg-anna-dark border text-white text-sm rounded-xl p-3 outline-none focus:border-anna-accent font-medium cursor-pointer ${
+                  errors.wuwa ? 'border-rose-500/80 ring-1 ring-rose-500/50' : 'border-anna-border'
+                }`}
               >
                 <option value="">-- Chọn kênh nhận thông báo Giftcode --</option>
                 {activeGuildChannels.map((ch) => (
@@ -338,7 +442,9 @@ export default function Features({
                 placeholder="Nhập Channel ID thủ công (vd: 1447095306079698984)"
                 value={config.wuwaChannelId}
                 onChange={(e) => handleChange('wuwaChannelId', e.target.value)}
-                className="w-full bg-anna-dark border border-anna-border text-white text-sm rounded-xl p-3 outline-none focus:border-anna-accent font-mono"
+                className={`w-full bg-anna-dark border text-white text-sm rounded-xl p-3 outline-none focus:border-anna-accent font-mono ${
+                  errors.wuwa ? 'border-rose-500/80 ring-1 ring-rose-500/50' : 'border-anna-border'
+                }`}
               />
             )}
           </div>
