@@ -179,9 +179,9 @@ export default function DiscordEmbedPreview({ embedData }) {
       {/* Bot Message Header */}
       <div className="flex items-start space-x-3">
         <img
-          src="https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png"
-          alt="Avatar"
-          className="w-10 h-10 rounded-full flex-shrink-0 cursor-pointer hover:opacity-90 transition mt-0.5"
+          src="/logo.jpg"
+          alt="Anna Bot Avatar"
+          className="w-10 h-10 rounded-full object-cover flex-shrink-0 cursor-pointer hover:opacity-90 transition mt-0.5"
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2 leading-tight mb-1">
