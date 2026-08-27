@@ -26,28 +26,28 @@ export default function Invite({ backendUrl = 'http://localhost:3000' }) {
 
   return (
     <div className="min-h-screen bg-anna-dark text-anna-text flex items-center justify-center p-6 selection:bg-anna-accent selection:text-white">
-      <div className="bg-anna-card border border-anna-border rounded-2xl p-8 max-w-md w-full text-center space-y-6 shadow-2xl">
+      <div className="bg-anna-card border border-anna-border rounded-3xl p-8 sm:p-10 max-w-md w-full text-center space-y-8 shadow-2xl">
         
         {/* Bot Avatar Icon */}
-        <div className="w-16 h-16 bg-gradient-to-tr from-anna-accent to-anna-purple rounded-2xl flex items-center justify-center mx-auto text-white shadow-xl">
-          <Bot className="w-9 h-9" />
+        <div className="w-20 h-20 bg-gradient-to-tr from-anna-accent to-anna-purple rounded-3xl flex items-center justify-center mx-auto text-white shadow-xl">
+          <Bot className="w-11 h-11" />
         </div>
 
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Mời Anna Bot Vào Server</h1>
-          <p className="text-xs text-anna-muted mt-1.5 leading-relaxed">
+        <div className="space-y-3">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Mời Anna Bot Vào Server</h1>
+          <p className="text-sm text-anna-muted leading-relaxed font-normal">
             Ủy quyền cho Anna Bot tham gia máy chủ Discord của bạn để mở khóa các tính năng quản lý bài đăng & minigame giải trí.
           </p>
         </div>
 
         {/* CTA Button */}
         {loading ? (
-          <div className="flex items-center justify-center space-x-2 text-xs text-anna-muted py-3">
-            <RefreshCw className="w-4 h-4 animate-spin text-anna-accent" />
+          <div className="flex items-center justify-center space-x-2 text-sm text-anna-muted py-4">
+            <RefreshCw className="w-5 h-5 animate-spin text-anna-accent" />
             <span>Đang lấy liên kết mời Bot...</span>
           </div>
         ) : error ? (
-          <div className="text-xs text-rose-400 bg-rose-500/10 p-3 rounded-lg border border-rose-500/20">
+          <div className="text-sm text-rose-400 bg-rose-500/10 p-4 rounded-2xl border border-rose-500/20">
             {error}
           </div>
         ) : (
@@ -55,7 +55,7 @@ export default function Invite({ backendUrl = 'http://localhost:3000' }) {
             href={inviteUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full bg-anna-accent hover:bg-anna-hover text-white font-bold py-3.5 px-4 rounded-xl transition duration-200 shadow-xl flex items-center justify-center text-sm cursor-pointer"
+            className="w-full bg-anna-accent hover:bg-anna-hover text-white font-bold py-4 px-6 rounded-2xl transition duration-200 shadow-xl flex items-center justify-center text-base cursor-pointer"
           >
             THÊM BOT VÀO DISCORD SERVER
           </a>

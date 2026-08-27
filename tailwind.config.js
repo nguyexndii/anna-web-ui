@@ -8,15 +8,15 @@ export default {
     extend: {
       colors: {
         anna: {
-          dark: '#0f172a',      // Slate 900 Main Canvas
-          card: '#1e293b',      // Slate 800 Card Container
-          border: '#334155',    // Slate 700 Borders
+          dark: '#090d16',      // Deep Canvas Background
+          card: '#1e293b',      // Card Container Layer
+          cardHover: '#293548', // Inset / Hover Card Layer
+          border: '#334155',    // Border Layer
           accent: '#6366f1',    // Indigo 500 Primary Action
           hover: '#4f46e5',     // Indigo 600 Hover Action
           purple: '#8b5cf6',    // Violet 500 Secondary Accent
           text: '#f8fafc',      // Slate 50 Primary Text
           muted: '#94a3b8',     // Slate 400 Muted Text
-          badge: '#0284c7'      // Sky 600 Badge Highlight
         },
         discord: {
           dark: '#313338',

@@ -5,7 +5,7 @@ import Builder from './dashboard-tabs/Builder';
 import Features from './dashboard-tabs/Features';
 import Analytics from './dashboard-tabs/Analytics';
 import ResultModal from '../components/ResultModal';
-import { Server, Home, Send, Sliders, Activity, ChevronRight, Eye, ArrowUp, ShieldCheck } from 'lucide-react';
+import { Server, Home, Send, Sliders, Activity, Eye, ArrowUp, ShieldCheck } from 'lucide-react';
 
 export default function GuildDashboard({
   user,
@@ -95,12 +95,12 @@ export default function GuildDashboard({
   // Synchronize Document Title
   useEffect(() => {
     const titles = {
-      overview: 'Anna Manager - Tổng Quan Máy Chủ',
-      builder: 'Anna Manager - Soạn Bài & Đăng Tin',
-      features: 'Anna Manager - Cấu Hình Tính Năng',
-      analytics: 'Anna Manager - Giám Sát Máy Chủ'
+      overview: 'Anna Bot - Tổng Quan Máy Chủ',
+      builder: 'Anna Bot - Soạn Bài & Đăng Tin',
+      features: 'Anna Bot - Cấu Hình Tính Năng',
+      analytics: 'Anna Bot - Giám Sát Máy Chủ'
     };
-    document.title = titles[activeTab] || 'Anna Manager Dashboard';
+    document.title = titles[activeTab] || 'Anna Bot Dashboard';
   }, [activeTab]);
 
   // Fetch Channels & Stats for this guildId
@@ -246,50 +246,50 @@ export default function GuildDashboard({
   const selectedChannelObj = (channels || []).find((ch) => ch && ch.id === formData.channelId);
 
   return (
-    <div className="min-h-screen bg-anna-dark text-anna-text p-6 selection:bg-anna-accent selection:text-white">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="min-h-screen bg-anna-dark text-anna-text p-6 sm:p-8 selection:bg-anna-accent selection:text-white">
+      <div className="max-w-5xl mx-auto space-y-8">
         
         {/* Top Server Header Bar */}
-        <div className="bg-anna-card border border-anna-border rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4 shadow-lg">
+        <div className="bg-anna-card border border-anna-border rounded-2xl p-6 flex flex-wrap items-center justify-between gap-4 shadow-xl">
           <div className="flex items-center space-x-4">
             {currentGuild.icon ? (
               <img
                 src={`https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}.png`}
                 alt={currentGuild.name}
-                className="w-12 h-12 rounded-2xl object-cover border border-anna-border"
+                className="w-14 h-14 rounded-2xl object-cover border border-anna-border"
               />
             ) : (
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-anna-accent to-anna-purple flex items-center justify-center font-bold text-white text-sm shadow">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-anna-accent to-anna-purple flex items-center justify-center font-extrabold text-white text-base shadow">
                 {currentGuild.name ? currentGuild.name.substring(0, 2).toUpperCase() : 'DS'}
               </div>
             )}
 
             <div>
               <div className="flex items-center space-x-2">
-                <h1 className="text-lg font-bold text-white">{currentGuild.name}</h1>
-                <ShieldCheck className="w-4 h-4 text-emerald-400" title="Admin Verified" />
+                <h1 className="text-xl font-extrabold text-white tracking-tight">{currentGuild.name}</h1>
+                <ShieldCheck className="w-4.5 h-4.5 text-emerald-400" title="Admin Verified" />
               </div>
-              <span className="text-xs text-anna-muted font-mono">Guild ID: {guildId}</span>
+              <span className="text-xs text-anna-muted font-mono block mt-0.5">Guild ID: {guildId}</span>
             </div>
           </div>
 
           <Link
             to="/servers"
-            className="text-xs bg-anna-dark hover:bg-slate-800 text-anna-text px-3.5 py-2 rounded-xl border border-anna-border transition cursor-pointer font-semibold flex items-center gap-1.5"
+            className="text-xs bg-anna-dark hover:bg-anna-cardHover text-anna-text px-4 py-2.5 rounded-xl border border-anna-border transition cursor-pointer font-bold flex items-center gap-2 shadow-sm"
           >
-            <Home className="w-3.5 h-3.5" />
+            <Home className="w-4 h-4" />
             <span>Đổi Server Khác</span>
           </Link>
         </div>
 
         {/* Sub-Navigation Tabs */}
-        <div className="flex items-center space-x-2 border-b border-anna-border pb-3 overflow-x-auto">
+        <div className="flex items-center space-x-2 border-b border-anna-border pb-4 overflow-x-auto">
           <button
             onClick={() => navigate(`/servers/${guildId}/overview`)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition cursor-pointer flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'overview'
-                ? 'bg-anna-accent text-white shadow-md'
-                : 'bg-anna-card text-anna-muted hover:text-white hover:bg-slate-800'
+                ? 'bg-anna-accent text-white shadow-lg'
+                : 'bg-anna-card text-anna-muted hover:text-white hover:bg-anna-cardHover'
             }`}
           >
             <Home className="w-4 h-4" />
@@ -298,10 +298,10 @@ export default function GuildDashboard({
 
           <button
             onClick={() => navigate(`/servers/${guildId}/builder`)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition cursor-pointer flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'builder'
-                ? 'bg-anna-accent text-white shadow-md'
-                : 'bg-anna-card text-anna-muted hover:text-white hover:bg-slate-800'
+                ? 'bg-anna-accent text-white shadow-lg'
+                : 'bg-anna-card text-anna-muted hover:text-white hover:bg-anna-cardHover'
             }`}
           >
             <Send className="w-4 h-4" />
@@ -310,10 +310,10 @@ export default function GuildDashboard({
 
           <button
             onClick={() => navigate(`/servers/${guildId}/features`)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition cursor-pointer flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'features'
-                ? 'bg-anna-accent text-white shadow-md'
-                : 'bg-anna-card text-anna-muted hover:text-white hover:bg-slate-800'
+                ? 'bg-anna-accent text-white shadow-lg'
+                : 'bg-anna-card text-anna-muted hover:text-white hover:bg-anna-cardHover'
             }`}
           >
             <Sliders className="w-4 h-4" />
@@ -322,10 +322,10 @@ export default function GuildDashboard({
 
           <button
             onClick={() => navigate(`/servers/${guildId}/analytics`)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition cursor-pointer flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'analytics'
-                ? 'bg-anna-accent text-white shadow-md'
-                : 'bg-anna-card text-anna-muted hover:text-white hover:bg-slate-800'
+                ? 'bg-anna-accent text-white shadow-lg'
+                : 'bg-anna-card text-anna-muted hover:text-white hover:bg-anna-cardHover'
             }`}
           >
             <Activity className="w-4 h-4" />
@@ -351,22 +351,22 @@ export default function GuildDashboard({
             >
               <div>
                 <h3 className="text-base font-bold text-white">Xác nhận đăng bài viết?</h3>
-                <p className="text-xs text-anna-text mt-2 leading-relaxed">
-                  Bài viết sẽ được xuất bản trực tiếp tới kênh Discord <strong className="text-anna-accent">#{selectedChannelObj ? selectedChannelObj.name : formData.channelId}</strong>. Bạn có chắc chắn muốn đăng không?
+                <p className="text-sm text-anna-text mt-2 leading-relaxed font-normal">
+                  Bài viết sẽ được xuất bản trực tiếp tới kênh Discord <strong className="text-indigo-400">#{selectedChannelObj ? selectedChannelObj.name : formData.channelId}</strong>. Bạn có chắc chắn muốn đăng không?
                 </p>
               </div>
               <div className="flex items-center justify-center space-x-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowSubmitConfirmModal(false)}
-                  className="w-1/2 bg-anna-dark hover:bg-slate-800 text-white text-xs font-semibold py-2.5 rounded-xl border border-anna-border transition cursor-pointer"
+                  className="w-1/2 bg-anna-dark hover:bg-anna-cardHover text-white text-xs font-bold py-2.5 rounded-xl border border-anna-border transition cursor-pointer"
                 >
                   Hủy bỏ
                 </button>
                 <button
                   type="button"
                   onClick={() => { setShowSubmitConfirmModal(false); executeSendEmbed(); }}
-                  className="w-1/2 bg-anna-accent hover:bg-anna-hover text-white text-xs font-semibold py-2.5 rounded-xl transition cursor-pointer shadow"
+                  className="w-1/2 bg-anna-accent hover:bg-anna-hover text-white text-xs font-bold py-2.5 rounded-xl transition cursor-pointer shadow"
                 >
                   Xác Nhận Đăng
                 </button>
@@ -389,20 +389,20 @@ export default function GuildDashboard({
                 <h3 className="text-base font-bold text-white">
                   Xác nhận {toggleConfirmModal.currentStatus ? 'TẮT' : 'BẬT'} tính năng?
                 </h3>
-                <p className="text-xs text-anna-muted mt-1">
+                <p className="text-xs text-anna-muted mt-1 font-normal">
                   Bạn có chắc chắn muốn {toggleConfirmModal.currentStatus ? 'tắt' : 'bật'} tính năng <strong>{toggleConfirmModal.featureName}</strong> cho Server này không?
                 </p>
               </div>
               <div className="flex items-center justify-center space-x-3 pt-2">
                 <button
                   onClick={() => setToggleConfirmModal({ open: false, featureKey: null, featureName: '', currentStatus: false })}
-                  className="w-1/2 bg-anna-dark hover:bg-slate-800 text-white text-xs font-semibold py-2 rounded-xl border border-anna-border transition cursor-pointer"
+                  className="w-1/2 bg-anna-dark hover:bg-anna-cardHover text-white text-xs font-bold py-2 rounded-xl border border-anna-border transition cursor-pointer"
                 >
                   Hủy bỏ
                 </button>
                 <button
                   onClick={executeFeatureToggle}
-                  className="w-1/2 bg-anna-accent hover:bg-anna-hover text-white text-xs font-semibold py-2 rounded-xl transition cursor-pointer shadow"
+                  className="w-1/2 bg-anna-accent hover:bg-anna-hover text-white text-xs font-bold py-2 rounded-xl transition cursor-pointer shadow"
                 >
                   Xác nhận {toggleConfirmModal.currentStatus ? 'Tắt' : 'Bật'}
                 </button>
@@ -474,7 +474,7 @@ export default function GuildDashboard({
         {showScrollTop && (
           <button
             onClick={scrollToTop}
-            className="bg-anna-card hover:bg-slate-800 text-white p-3.5 rounded-full shadow-2xl transition duration-200 cursor-pointer border border-anna-border flex items-center justify-center"
+            className="bg-anna-card hover:bg-anna-cardHover text-white p-3.5 rounded-full shadow-2xl transition duration-200 cursor-pointer border border-anna-border flex items-center justify-center"
             title="Quay lại đầu trang"
           >
             <ArrowUp className="w-5 h-5" />
