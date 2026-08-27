@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bot, LogOut, ShieldCheck } from 'lucide-react';
+import { LogOut, ShieldCheck } from 'lucide-react';
 
 export default function Navbar({ user, onLogin, onLogout }) {
   const location = useLocation();
@@ -16,9 +16,11 @@ export default function Navbar({ user, onLogin, onLogout }) {
         
         {/* Brand Logo & Name */}
         <Link to="/" className="flex items-center space-x-3.5 group">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-anna-accent to-anna-purple flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-transform duration-200">
-            <Bot className="w-6 h-6" />
-          </div>
+          <img
+            src="/logo.jpg"
+            alt="Anna Bot"
+            className="w-11 h-11 rounded-2xl object-cover border-2 border-anna-accent shadow-lg group-hover:scale-105 transition-transform duration-200"
+          />
           <div>
             <span className="text-lg font-extrabold text-white tracking-tight block leading-none">
               Anna Bot

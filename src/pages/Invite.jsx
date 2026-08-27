@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bot, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 export default function Invite({ backendUrl = 'http://localhost:3000' }) {
   const [inviteUrl, setInviteUrl] = useState('');
@@ -28,10 +28,12 @@ export default function Invite({ backendUrl = 'http://localhost:3000' }) {
     <div className="min-h-screen bg-anna-dark text-anna-text flex items-center justify-center p-6 selection:bg-anna-accent selection:text-white">
       <div className="bg-anna-card border border-anna-border rounded-3xl p-8 sm:p-10 max-w-md w-full text-center space-y-8 shadow-2xl">
         
-        {/* Bot Avatar Icon */}
-        <div className="w-20 h-20 bg-gradient-to-tr from-anna-accent to-anna-purple rounded-3xl flex items-center justify-center mx-auto text-white shadow-xl">
-          <Bot className="w-11 h-11" />
-        </div>
+        {/* Bot Avatar Image */}
+        <img
+          src="/logo.jpg"
+          alt="Anna Bot Avatar"
+          className="w-24 h-24 rounded-3xl object-cover border-2 border-anna-accent mx-auto shadow-2xl hover:scale-105 transition duration-200"
+        />
 
         <div className="space-y-3">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Mời Anna Bot Vào Server</h1>

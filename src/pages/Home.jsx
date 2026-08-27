@@ -6,8 +6,17 @@ export default function Home({ user, onLogin }) {
     <div className="min-h-screen bg-anna-dark text-anna-text selection:bg-anna-accent selection:text-white">
       
       {/* HERO SECTION */}
-      <section className="relative pt-20 pb-20 px-6 max-w-5xl mx-auto text-center space-y-8">
+      <section className="relative pt-16 pb-20 px-6 max-w-5xl mx-auto text-center space-y-8">
         
+        {/* Avatar Image */}
+        <div className="flex items-center justify-center">
+          <img
+            src="/logo.jpg"
+            alt="Anna Bot Avatar"
+            className="w-28 h-28 rounded-3xl object-cover border-4 border-anna-accent shadow-2xl hover:scale-105 transition duration-200"
+          />
+        </div>
+
         {/* Badge */}
         <div className="inline-flex items-center px-4 py-2 rounded-full bg-anna-card border border-anna-border text-sm font-semibold text-indigo-300 shadow-md">
           Bảng Điều Khiển Quản Lý Discord Bot
